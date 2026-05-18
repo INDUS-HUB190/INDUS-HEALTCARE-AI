@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { motion } from 'motion/react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line, AreaChart, Area } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Users, Search, MessageSquare, Zap, Activity, TrendingUp, Clock, UserCheck } from 'lucide-react';
-import { collection, query, getDocs, limit, orderBy } from 'firebase/firestore';
-import { db } from '../lib/firebase';
 import { useAuth } from '../App';
+import { cn } from '../lib/utils';
 
 const data = [
   { name: 'Mon', users: 400, searches: 240, chats: 240 },
@@ -18,7 +17,7 @@ const data = [
 
 export default function Admin() {
   const { user } = useAuth();
-  const [stats, setStats] = useState({
+  const [stats] = useState({
     totalUsers: 1420,
     dailyVisitors: 156,
     activeUsers: 89,
@@ -26,8 +25,16 @@ export default function Admin() {
     aiUsage: 892
   });
 
-  if (user?.email !== 'anantjeet.bly@gmail.com') {
-    return <div className="p-20 text-center font-bold">Access Denied</div>;
+  if (!user?.isAdmin) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Activity className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <h1 className="text-2xl font-bold">Access Restricted</h1>
+          <p className="text-gray-500">This area is for the founder only.</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -142,8 +149,4 @@ export default function Admin() {
       </div>
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }

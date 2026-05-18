@@ -5,11 +5,9 @@
 
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useState, useEffect, createContext, useContext } from 'react';
-import { onAuthStateChanged, User } from 'firebase/auth';
-import { auth } from './lib/firebase';
 import { Toaster } from 'react-hot-toast';
 
-// Pages & Components (to be created)
+// Pages & Components
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Landing from './pages/Landing';
@@ -20,12 +18,21 @@ import Comparison from './pages/Comparison';
 import Admin from './pages/Admin';
 import Auth from './pages/Auth';
 
-// Auth Context
+// Local Auth Types
+interface LocalUser {
+  uid: string;
+  email: string;
+  displayName: string;
+  isAdmin: boolean;
+}
+
 interface AuthContextType {
-  user: User | null;
+  user: LocalUser | null;
   loading: boolean;
   language: 'en' | 'hi';
   setLanguage: (lang: 'en' | 'hi') => void;
+  login: (user: LocalUser) => void;
+  logout: () => void;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -33,22 +40,35 @@ const AuthContext = createContext<AuthContextType>({
   loading: true,
   language: 'en',
   setLanguage: () => {},
+  login: () => {},
+  logout: () => {},
 });
 
 export const useAuth = () => useContext(AuthContext);
 
 export default function App() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<LocalUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
-    });
-    return () => unsubscribe();
+    // Check for saved session
+    const savedUser = localStorage.getItem('indus_session');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
+    setLoading(false);
   }, []);
+
+  const login = (userData: LocalUser) => {
+    setUser(userData);
+    localStorage.setItem('indus_session', JSON.stringify(userData));
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('indus_session');
+  };
 
   if (loading) {
     return (
@@ -59,7 +79,7 @@ export default function App() {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, language, setLanguage }}>
+    <AuthContext.Provider value={{ user, loading, language, setLanguage, login, logout }}>
       <Router>
         <div className="min-h-screen flex flex-col">
           <Navbar />
@@ -71,7 +91,7 @@ export default function App() {
               <Route path="/chat" element={user ? <Chat /> : <Navigate to="/auth" />} />
               <Route path="/search" element={user ? <MedicineSearch /> : <Navigate to="/auth" />} />
               <Route path="/compare" element={user ? <Comparison /> : <Navigate to="/auth" />} />
-              <Route path="/admin" element={user?.email === 'anantjeet.bly@gmail.com' ? <Admin /> : <Navigate to="/" />} />
+              <Route path="/admin" element={user?.isAdmin ? <Admin /> : <Navigate to="/" />} />
             </Routes>
           </main>
           <Footer />

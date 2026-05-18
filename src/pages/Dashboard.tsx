@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { useAuth } from '../App';
 import { Search, MessageSquare, Bookmark, BarChart, Activity, Clock, ChevronRight, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { cn } from '../lib/utils';
 
 export default function Dashboard() {
   const { user, language } = useAuth();
@@ -155,8 +156,4 @@ export default function Dashboard() {
       </div>
     </div>
   );
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ');
 }

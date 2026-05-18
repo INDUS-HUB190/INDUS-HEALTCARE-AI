@@ -1,18 +1,17 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../App';
-import { auth } from '../../lib/firebase';
 import { LogOut, User as UserIcon, MessageSquare, Search, Languages, Menu, X, BarChart2 } from 'lucide-react';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { cn } from '../../lib/utils';
 
 export default function Navbar() {
-  const { user, language, setLanguage } = useAuth();
+  const { user, language, setLanguage, logout } = useAuth();
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
 
-  const handleLogout = async () => {
-    await auth.signOut();
+  const handleLogout = () => {
+    logout();
     navigate('/');
   };
 
@@ -23,7 +22,7 @@ export default function Navbar() {
     { name: language === 'hi' ? 'तुलना करें' : 'Compare', path: '/compare', icon: Search },
   ] : [];
 
-  if (user?.email === 'anantjeet.bly@gmail.com') {
+  if (user?.isAdmin) {
     navLinks.push({ name: language === 'hi' ? 'एडमिन' : 'Admin', path: '/admin', icon: BarChart2 });
   }
 
