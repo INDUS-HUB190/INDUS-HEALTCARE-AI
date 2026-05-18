@@ -73,19 +73,17 @@ async function startServer() {
       const { query, language = 'en' } = req.body;
       
       const prompt = `
-        Provide detailed educational information about the medicine: ${query}.
-        Include:
-        - Category
-        - Uses
-        - Pros and Cons
-        - Side Effects
-        - Precautions
-        - Warnings
-        - General Dosage (with disclaimer)
-        - Prescription Status in India
+        Provide a CONCISE educational summary for the medicine: ${query}.
+        Focus on:
+        - **Category** (Short)
+        - **Uses** (Brief list)
+        - **Pros** (Small, clear lines)
+        - **Cons** (Small, clear lines)
+        - **Side Effects** (Major ones only)
+        - **Safety Note** (One sentence disclaimer)
         
         Respond in ${language === 'hi' ? 'Hindi' : 'English'}.
-        Use a structured JSON format if possible, otherwise clean markdown.
+        Use clean markdown with bullet points for readability.
       `;
 
       const response = await genAI.models.generateContent({
