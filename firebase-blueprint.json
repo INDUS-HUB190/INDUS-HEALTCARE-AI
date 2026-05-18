@@ -1,0 +1,120 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "preferredLanguage": { "type": "string", "enum": ["en", "hi"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "isAdmin": { "type": "boolean" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Medicine": {
+      "title": "Medicine",
+      "description": "Information about a medicine",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "nameHindi": { "type": "string" },
+        "category": { "type": "string" },
+        "uses": { "type": "string" },
+        "sideEffects": { "type": "array", "items": { "type": "string" } },
+        "precautions": { "type": "string" },
+        "warnings": { "type": "string" },
+        "dosage": { "type": "string" },
+        "prescriptionStatus": { "type": "string" },
+        "lastUpdated": { "type": "string", "format": "date-time" }
+      },
+      "required": ["name", "category"]
+    },
+    "Bookmark": {
+      "title": "Bookmark",
+      "description": "User's saved medicines",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "medicineId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "medicineId"]
+    },
+    "ChatSession": {
+      "title": "ChatSession",
+      "description": "AI Chat session",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "messages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "role": { "type": "string", "enum": ["user", "assistant"] },
+              "content": { "type": "string" },
+              "timestamp": { "type": "string", "format": "date-time" }
+            }
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId"]
+    },
+    "SearchHistory": {
+      "title": "SearchHistory",
+      "description": "User's recent searches",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "query": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "query"]
+    },
+    "Analytic": {
+      "title": "Analytic",
+      "description": "System usage metrics",
+      "type": "object",
+      "properties": {
+        "type": { "type": "string" },
+        "value": { "type": "number" },
+        "metadata": { "type": "object" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["type", "value"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles"
+    },
+    "/medicines/{medicineId}": {
+      "schema": "Medicine",
+      "description": "Medicine database"
+    },
+    "/users/{userId}/bookmarks/{bookmarkId}": {
+      "schema": "Bookmark",
+      "description": "User bookmarks"
+    },
+    "/users/{userId}/chats/{chatId}": {
+      "schema": "ChatSession",
+      "description": "User chat history"
+    },
+    "/users/{userId}/searches/{searchId}": {
+      "schema": "SearchHistory",
+      "description": "User search history"
+    },
+    "/analytics/{analyticId}": {
+      "schema": "Analytic",
+      "description": "Global analytics"
+    }
+  }
+}

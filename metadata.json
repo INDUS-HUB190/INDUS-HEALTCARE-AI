@@ -1,0 +1,6 @@
+{
+  "name": "INDUS",
+  "description": "Premium AI-powered healthcare education platform for Indian users.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

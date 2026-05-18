@@ -1,0 +1,97 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Catch-all deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Entity Validations
+    function isValidUser(data) {
+      return data.uid == request.auth.uid &&
+             data.email is string &&
+             data.email.size() <= 256;
+    }
+
+    function isValidMedicine(data) {
+      return data.name is string && data.name.size() <= 256 &&
+             data.category is string;
+    }
+
+    function isValidBookmark(data) {
+      return data.userId == request.auth.uid &&
+             data.medicineId is string;
+    }
+
+    function isValidChat(data) {
+      return data.userId == request.auth.uid &&
+             data.messages is list;
+    }
+
+    function isValidSearch(data) {
+      return data.userId == request.auth.uid &&
+             data.query is string && data.query.size() <= 500;
+    }
+
+    // Rules
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && 
+                    !incoming().diff(existing()).affectedKeys().hasAny(['isAdmin', 'uid']);
+    }
+
+    match /medicines/{medicineId} {
+      allow list, get: if true; // Publicly searchable
+      allow write: if isAdmin();
+    }
+
+    match /users/{userId}/bookmarks/{bookmarkId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/chats/{chatId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /users/{userId}/searches/{searchId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    match /analytics/{analyticId} {
+      allow read: if isAdmin();
+      allow create: if true; // Allow client to report usage
+    }
+
+    // Admin collection (managed via Firebase Console or special script)
+    match /admins/{adminId} {
+      allow read: if isSignedIn();
+    }
+  }
+}
