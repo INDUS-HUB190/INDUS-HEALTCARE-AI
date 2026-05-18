@@ -12,9 +12,19 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Health check
+  app.get("/api/health", (req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   // Initialize Gemini
+  const apiKey = process.env.GEMINI_API_KEY || "";
+  if (!apiKey) {
+    console.warn("WARNING: GEMINI_API_KEY is not set in environment variables.");
+  }
+
   const genAI = new GoogleGenAI({ 
-    apiKey: process.env.GEMINI_API_KEY || "",
+    apiKey,
     httpOptions: {
       headers: {
         'User-Agent': 'aistudio-build',
@@ -25,8 +35,12 @@ async function startServer() {
   // API Routes
   app.post("/api/chat", async (req, res) => {
     try {
-      const { message, history, language = 'en' } = req.body;
+      const { message, language = 'en' } = req.body;
       
+      if (!apiKey) {
+        return res.status(503).json({ error: "Gemini AI service unavailable (api key missing)" });
+      }
+
       const systemInstruction = `
         You are INDUS AI, a premium healthcare assistant for Indian users.
         Founder: Anant Singh.
@@ -39,18 +53,6 @@ async function startServer() {
         Format your response in a clean, organized markdown structure.
       `;
 
-      const chat = genAI.chats.create({
-        model: "gemini-3-flash-preview",
-        config: {
-          systemInstruction,
-        },
-      });
-
-      // Send history if provided
-      // In @google/genai, we don't pass history to chats.create directly in a simple way for stateless calls, 
-      // but let's just use generateContent for simplicity or manage history.
-      // Actually, let's use a simpler pattern.
-      
       const response = await genAI.models.generateContent({
         model: "gemini-3-flash-preview",
         contents: [
@@ -61,10 +63,11 @@ async function startServer() {
         }
       });
 
-      res.json({ text: response.text });
+      const text = response.text || "I'm sorry, I couldn't generate a response at this time. Please try again.";
+      res.json({ text });
     } catch (error: any) {
-      console.error("Gemini Error:", error);
-      res.status(500).json({ error: error.message });
+      console.error("Gemini Chat Error:", error);
+      res.status(500).json({ error: error.message || "An unexpected error occurred in Gemini Chat." });
     }
   });
 
@@ -72,6 +75,10 @@ async function startServer() {
     try {
       const { query, language = 'en' } = req.body;
       
+      if (!apiKey) {
+        return res.status(503).json({ error: "Gemini AI service unavailable (api key missing)" });
+      }
+
       const prompt = `
         Provide a CONCISE educational summary for the medicine: ${query}.
         Focus on:
@@ -91,9 +98,11 @@ async function startServer() {
         contents: prompt,
       });
 
-      res.json({ text: response.text });
+      const text = response.text || "No information found for this medicine. Please check the spelling or try another query.";
+      res.json({ text });
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      console.error("Gemini Medicine Info Error:", error);
+      res.status(500).json({ error: error.message || "An unexpected error occurred while fetching medicine info." });
     }
   });
 

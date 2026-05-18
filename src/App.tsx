@@ -53,11 +53,17 @@ export default function App() {
 
   useEffect(() => {
     // Check for saved session
-    const savedUser = localStorage.getItem('indus_session');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
+    try {
+      const savedUser = localStorage.getItem('indus_session');
+      if (savedUser) {
+        setUser(JSON.parse(savedUser));
+      }
+    } catch (e) {
+      console.error("Failed to restore session:", e);
+      localStorage.removeItem('indus_session');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
   const login = (userData: LocalUser) => {
