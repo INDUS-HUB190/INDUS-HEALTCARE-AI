@@ -43,10 +43,14 @@ export default function MedicineSearch() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query, language }),
       });
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'Search failed');
+      }
       const data = await response.json();
       setResult(data.text);
-    } catch (error) {
-      toast.error('Search failed');
+    } catch (error: any) {
+      toast.error(error.message || 'Search failed');
     } finally {
       setLoading(false);
     }

@@ -62,12 +62,15 @@ export default function Chat() {
         }),
       });
 
-      if (!response.ok) throw new Error('API request failed');
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.error || 'API request failed');
+      }
 
       const data = await response.json();
       setMessages(prev => [...prev, { role: 'assistant', content: data.text }]);
     } catch (error: any) {
-      toast.error('Failed to get response');
+      toast.error(error.message || 'Failed to get response');
       console.error(error);
     } finally {
       setLoading(false);
